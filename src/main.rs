@@ -1,3 +1,5 @@
+use std::{thread::sleep, time::Duration};
+
 enum BlockKind {
     I,
     O,
@@ -94,6 +96,9 @@ fn main() {
 
     let mut pos = Position { x: 4, y: 0 };
 
+    // 画面クリア
+    println!("\x1b[2J\x1b[H\x1b[?25l");
+
     // 5マス分落下させる
     for _ in 0..5 {
         // 裏データの更新
@@ -106,9 +111,11 @@ fn main() {
             }
         }
 
+        // 座標を更新
         pos.y += 1;
 
         // 描画
+        println!("\x1b[H"); // カーソルを左上に移動
         for y in 0..21 {
             for x in 0..13 {
                 if field_buf[y][x] == 1 {
@@ -119,5 +126,11 @@ fn main() {
             }
             println!();
         }
+
+        // 1秒待機
+        sleep(Duration::from_millis(1000));
     }
+
+    // カーソルを再表示
+    println!("\x1b[?25h");
 }
