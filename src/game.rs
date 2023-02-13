@@ -135,3 +135,28 @@ pub fn move_block(game: &mut Game, new_pos: Position) {
         game.pos = new_pos;
     }
 }
+
+/// ブロックを生成する
+/// 生成に失敗した場合はエラーを返す
+pub fn spawn_block(game: &mut Game) -> Result<(), ()> {
+    game.pos = Position::init();
+    game.block = rand::random();
+    if is_collision(&game.field, &game.pos, game.block) {
+        Err(())
+    } else {
+        Ok(())
+    }
+}
+
+/// 盤面を描画し、ゲームオーバーを表示し、プログラムを終了する
+pub fn gameover(game: &Game) -> ! {
+    draw(game);
+    println!("Game Over!");
+    quit();
+}
+
+/// カーソルを表示し、プログラムを終了する
+pub fn quit() -> ! {
+    println!("\x1b[?25h"); // カーソルを表示
+    std::process::exit(0);
+}

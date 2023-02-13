@@ -8,7 +8,9 @@ use std::sync::{Arc, Mutex};
 use std::thread;
 use std::{thread::sleep, time::Duration};
 
-use crate::game::{draw, erace_line, fix_block, is_collision, move_block};
+use crate::game::{
+    draw, erace_line, fix_block, gameover, is_collision, move_block, quit, spawn_block,
+};
 
 fn main() {
     // ゲームの初期化
@@ -43,10 +45,9 @@ fn main() {
                 } else {
                     fix_block(&mut game);
                     erace_line(&mut game.field);
-
-                    // ブロックを初期座標へ移動し、新しいブロックをランダムに生成
-                    game.pos = Position::init();
-                    game.block = rand::random();
+                    if spawn_block(&mut game).is_err() {
+                        gameover(&game);
+                    }
                 }
 
                 // 裏データの描画
@@ -86,10 +87,7 @@ fn main() {
                 move_block(&mut game, new_pos);
                 draw(&game);
             }
-            Ok(Key::Char('q')) => {
-                println!("\x1b[?25h"); // カーソルを再表示
-                break;
-            }
+            Ok(Key::Char('q')) => quit(),
             _ => {}
         }
     }
