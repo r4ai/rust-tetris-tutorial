@@ -97,9 +97,15 @@ impl Distribution<BlockKind> for Standard {
 fn is_collision(field: &Field, pos: &Position, block: BlockKind) -> bool {
     for y in 0..4 {
         for x in 0..4 {
+            // ブロックの範囲外は無視
+            if y + pos.y >= FIELD_HEIGHT || x + pos.x >= FIELD_WIDTH {
+                continue;
+            };
+
+            // ブロックがすでにある場所への衝突、フィールドの外壁への衝突の場合はTrueを返す
             if field[y + pos.y][x + pos.x] & BLOCKS[block as usize][y][x] == 1 {
                 return true;
-            }
+            };
         }
     }
     false
@@ -223,7 +229,7 @@ fn main() {
                 let block = block.lock().unwrap();
                 let mut pos = pos.lock().unwrap();
                 let new_pos = Position {
-                    x: pos.x - 1,
+                    x: pos.x.checked_sub(1).unwrap_or(pos.x),
                     y: pos.y,
                 };
                 if !is_collision(&field, &new_pos, *block) {
