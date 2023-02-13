@@ -209,6 +209,25 @@ fn main() {
                         }
                     }
 
+                    // ラインの削除処理
+                    for y in 1..FIELD_HEIGHT - 1 {
+                        // ラインが揃っているかチェック
+                        let mut can_erace = true;
+                        for x in 1..(FIELD_WIDTH - 1) {
+                            if field[y][x] == 0 {
+                                can_erace = false;
+                                break;
+                            }
+                        }
+
+                        // ラインを削除
+                        if can_erace {
+                            for y2 in (2..=y).rev() {
+                                field[y2] = field[y2 - 1];
+                            }
+                        }
+                    }
+
                     // ブロックを初期座標へ移動
                     *pos = Position { x: 4, y: 0 };
                     *block = rand::random();
