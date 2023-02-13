@@ -1,6 +1,7 @@
-use std::{thread::sleep, time::Duration};
-
 use getch_rs::{Getch, Key};
+use std::sync::{Arc, Mutex};
+use std::thread;
+use std::{thread::sleep, thread::spawn, time::Duration};
 
 const FIELD_WIDTH: usize = 11 + 2;
 const FIELD_HEIGHT: usize = 20 + 1;
@@ -86,6 +87,33 @@ fn is_collision(field: &Field, pos: &Position, block: BlockKind) -> bool {
     false
 }
 
+fn draw(field: &Field, pos: &Position) {
+    // 裏データの生成
+    let mut field_buf = field.clone();
+
+    // 裏データの更新
+    for y in 0..4 {
+        for x in 0..4 {
+            if BLOCKS[BlockKind::I as usize][y][x] == 1 {
+                field_buf[y + pos.y][x + pos.x] = 1;
+            }
+        }
+    }
+
+    // 裏データの描画
+    println!("\x1b[H"); // カーソルを先頭へ移動
+    for y in 0..FIELD_HEIGHT {
+        for x in 0..FIELD_WIDTH {
+            if field_buf[y][x] == 1 {
+                print!("[]");
+            } else {
+                print!(" .");
+            }
+        }
+        println!();
+    }
+}
+
 fn main() {
     let field = [
         [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
@@ -111,85 +139,80 @@ fn main() {
         [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
     ];
 
-    let mut pos = Position { x: 4, y: 0 };
-    let g = Getch::new();
+    let mut pos = Arc::new(Mutex::new(Position { x: 4, y: 0 }));
 
     // 画面クリア
     println!("\x1b[2J\x1b[H\x1b[?25l");
 
-    // 5マス分落下させる
-    loop {
-        // 裏データの生成
-        let mut field_buf = field;
+    // 初回描画(フィールドの描画)
+    draw(&field, &pos.lock().unwrap());
 
-        // 座標の更新(自然落下)
-        let new_pos = Position {
-            x: pos.x,
-            y: pos.y + 1,
-        };
-        if !is_collision(&field, &pos, BlockKind::I) {
-            pos = new_pos;
-        }
+    // 自然落下処理
+    {
+        let pos = Arc::clone(&pos);
+        thread::spawn(move || {
+            loop {
+                // 1秒待機
+                sleep(Duration::from_millis(1000));
 
-        // 裏データの更新
-        for y in 0..4 {
-            for x in 0..4 {
-                if BLOCKS[BlockKind::I as usize][y][x] == 1 {
-                    field_buf[y + pos.y][x + pos.x] = 1;
-                }
-            }
-        }
-
-        // 描画
-        println!("\x1b[H"); // カーソルを左上に移動
-        for y in 0..FIELD_HEIGHT {
-            for x in 0..FIELD_WIDTH {
-                if field_buf[y][x] == 1 {
-                    print!("[]");
-                } else {
-                    print!(" .")
-                }
-            }
-            println!();
-        }
-
-        // 1秒待機
-        sleep(Duration::from_millis(1000));
-
-        // キー入力を待機
-        match g.getch() {
-            Ok(Key::Left) => {
-                let new_pos = Position {
-                    x: pos.x - 1,
-                    y: pos.y,
-                };
-                if !is_collision(&field, &new_pos, BlockKind::I) {
-                    pos = new_pos;
-                }
-            }
-            Ok(Key::Right) => {
-                let new_pos = Position {
-                    x: pos.x + 1,
-                    y: pos.y,
-                };
-                if !is_collision(&field, &new_pos, BlockKind::I) {
-                    pos = new_pos;
-                }
-            }
-            Ok(Key::Down) => {
+                // 自然落下
+                let mut pos = pos.lock().unwrap();
                 let new_pos = Position {
                     x: pos.x,
                     y: pos.y + 1,
                 };
                 if !is_collision(&field, &new_pos, BlockKind::I) {
-                    pos = new_pos;
+                    *pos = new_pos;
                 }
+
+                // 裏データの描画
+                draw(&field, &pos);
             }
-            Ok(Key::Char('q')) => break,
-            _ => (),
-        }
+        });
     }
 
-    // カーソルを再表示
-    println!("\x1b[?25h");
+    // キー入力処理
+    let g = Getch::new();
+    loop {
+        match g.getch() {
+            Ok(Key::Left) => {
+                let mut pos = pos.lock().unwrap();
+                let new_pos = Position {
+                    x: pos.x - 1,
+                    y: pos.y,
+                };
+                if !is_collision(&field, &new_pos, BlockKind::I) {
+                    *pos = new_pos;
+                }
+                draw(&field, &pos);
+            }
+            Ok(Key::Right) => {
+                let mut pos = pos.lock().unwrap();
+                let new_pos = Position {
+                    x: pos.x + 1,
+                    y: pos.y,
+                };
+                if !is_collision(&field, &new_pos, BlockKind::I) {
+                    *pos = new_pos;
+                }
+                draw(&field, &pos);
+            }
+            Ok(Key::Down) => {
+                let mut pos = pos.lock().unwrap();
+                let new_pos = Position {
+                    x: pos.x,
+                    y: pos.y + 1,
+                };
+                if !is_collision(&field, &new_pos, BlockKind::I) {
+                    *pos = new_pos;
+                }
+                draw(&field, &pos);
+            }
+            Ok(Key::Char('q')) => {
+                println!("\x1b[?25h"); // カーソルを再表示
+                break;
+            }
+            _ => {}
+        }
+    }
 }
