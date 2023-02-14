@@ -1,8 +1,7 @@
 mod block;
 mod game;
 
-use block::{BlockKind, BLOCKS};
-use game::{Field, Game, Position, FIELD_HEIGHT, FIELD_WIDTH};
+use game::{Game, Position};
 use getch_rs::{Getch, Key};
 use std::sync::{Arc, Mutex};
 use std::thread;
@@ -39,7 +38,7 @@ fn main() {
                     x: game.pos.x,
                     y: game.pos.y + 1,
                 };
-                if !is_collision(&game.field, &new_pos, game.block) {
+                if !is_collision(&game.field, &new_pos, &game.block) {
                     // ブロックの移動
                     game.pos = new_pos;
                 } else {
