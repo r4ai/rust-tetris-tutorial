@@ -201,24 +201,44 @@ pub fn rotate_left(game: &mut Game) {
 /// スーパーローテーション
 fn super_rotation(field: &Field, pos: &Position, block: &BlockShape) -> Result<Position, ()> {
     let diff_pos = [
-        // 上
+        // 上へ1マスずらす
         Position {
             x: pos.x,
             y: pos.y.checked_sub(1).unwrap_or(pos.y),
         },
-        // 右
+        // 右へ1マスずらす
         Position {
             x: pos.x.checked_add(1).unwrap_or(pos.x),
             y: pos.y,
         },
-        // 下
+        // 下へ1マスずらす
         Position {
             x: pos.x,
             y: pos.y.checked_add(1).unwrap_or(pos.y),
         },
-        // 左
+        // 左へ1マスずらす
         Position {
             x: pos.x.checked_sub(1).unwrap_or(pos.x),
+            y: pos.y,
+        },
+        // 上へ2マスずらす
+        Position {
+            x: pos.x,
+            y: pos.y.checked_sub(2).unwrap_or(pos.y),
+        },
+        // 右へ2マスずらす
+        Position {
+            x: pos.x.checked_add(2).unwrap_or(pos.x),
+            y: pos.y,
+        },
+        // 下へ2マスずらす
+        Position {
+            x: pos.x,
+            y: pos.y.checked_add(2).unwrap_or(pos.y),
+        },
+        // 左へ2マスずらす
+        Position {
+            x: pos.x.checked_sub(2).unwrap_or(pos.x),
             y: pos.y,
         },
     ];
