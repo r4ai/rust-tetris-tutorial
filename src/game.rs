@@ -76,12 +76,38 @@ pub fn is_collision(field: &Field, pos: &Position, block: &BlockShape) -> bool {
     false
 }
 
+fn get_ghost_pos(field: &Field, pos: &Position, block: &BlockShape) -> Position {
+    let mut ghost_pos = *pos;
+    loop {
+        let new_pos = Position {
+            x: ghost_pos.x,
+            y: ghost_pos.y + 1,
+        };
+        if is_collision(field, &new_pos, block) {
+            break;
+        } else {
+            ghost_pos = new_pos;
+        }
+    }
+    ghost_pos
+}
+
 #[allow(clippy::needless_range_loop)]
 pub fn draw(Game { field, pos, block }: &Game) {
     // 裏データの生成
     let mut field_buf = *field;
 
-    // 裏データの更新
+    // 裏データにゴーストブロックを書き込む
+    let ghost_pos = get_ghost_pos(field, pos, block);
+    for y in 0..4 {
+        for x in 0..4 {
+            if block[y][x] != block_kind::NONE {
+                field_buf[y + ghost_pos.y][x + ghost_pos.x] = block_kind::GHOST;
+            }
+        }
+    }
+
+    // 裏データにブロックを書き込む
     for y in 0..4 {
         for x in 0..4 {
             if block[y][x] != block_kind::NONE {
