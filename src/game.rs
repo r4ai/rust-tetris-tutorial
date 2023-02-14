@@ -153,7 +153,7 @@ pub fn rotate_right(game: &mut Game) {
 /// 生成に失敗した場合はエラーを返す
 pub fn spawn_block(game: &mut Game) -> Result<(), ()> {
     game.pos = Position::init();
-    game.block = rand::random();
+    game.block = BLOCKS[rand::random::<BlockKind>() as usize];
     if is_collision(&game.field, &game.pos, &game.block) {
         Err(())
     } else {
