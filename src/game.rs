@@ -136,6 +136,19 @@ pub fn move_block(game: &mut Game, new_pos: Position) {
     }
 }
 
+/// 右に90度回転する
+pub fn rotate_right(game: &mut Game) {
+    let mut new_shape: BlockShape = Default::default();
+    for y in 0..4 {
+        for x in 0..4 {
+            new_shape[y][x] = game.block[4 - 1 - x][y];
+        }
+    }
+    if !is_collision(&game.field, &game.pos, &new_shape) {
+        game.block = new_shape;
+    }
+}
+
 /// ブロックを生成する
 /// 生成に失敗した場合はエラーを返す
 pub fn spawn_block(game: &mut Game) -> Result<(), ()> {
