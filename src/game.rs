@@ -1,7 +1,7 @@
 use crate::block::{BlockKind, BlockShape, BLOCKS};
 
-pub const FIELD_WIDTH: usize = 11 + 2;
-pub const FIELD_HEIGHT: usize = 20 + 1;
+pub const FIELD_WIDTH: usize = 11 + 2 + 2; //  フィールド + 壁 + 番兵
+pub const FIELD_HEIGHT: usize = 20 + 1 + 1; // フィールド + 底 + 番兵
 pub type Field = [[usize; FIELD_WIDTH]; FIELD_HEIGHT];
 
 pub struct Position {
@@ -11,7 +11,7 @@ pub struct Position {
 
 impl Position {
     pub fn init() -> Self {
-        Self { x: 4, y: 0 }
+        Self { x: 5, y: 0 }
     }
 }
 
@@ -25,27 +25,28 @@ impl Game {
     pub fn new() -> Game {
         Game {
             field: [
-                [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-                [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-                [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-                [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-                [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-                [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-                [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-                [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-                [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-                [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-                [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-                [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-                [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-                [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-                [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-                [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-                [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-                [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-                [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-                [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-                [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+                [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+                [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+                [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+                [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+                [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+                [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+                [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+                [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+                [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+                [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+                [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+                [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+                [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+                [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+                [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+                [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+                [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+                [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+                [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+                [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             ],
             pos: Position::init(),
             block: BLOCKS[rand::random::<BlockKind>() as usize],
@@ -70,6 +71,7 @@ pub fn is_collision(field: &Field, pos: &Position, block: &BlockShape) -> bool {
     false
 }
 
+#[allow(clippy::needless_range_loop)]
 pub fn draw(Game { field, pos, block }: &Game) {
     // 裏データの生成
     let mut field_buf = *field;
@@ -85,8 +87,8 @@ pub fn draw(Game { field, pos, block }: &Game) {
 
     // 裏データの描画
     println!("\x1b[H"); // カーソルを先頭へ移動
-    for y in 0..FIELD_HEIGHT {
-        for x in 0..FIELD_WIDTH {
+    for y in 0..(FIELD_HEIGHT - 1) {
+        for x in 0..(FIELD_WIDTH - 1) {
             if field_buf[y][x] == 1 {
                 print!("[]");
             } else {
@@ -110,10 +112,10 @@ pub fn fix_block(Game { field, pos, block }: &mut Game) {
 
 /// ラインが揃っているかチェックし、揃っている場合は削除する
 pub fn erace_line(field: &mut Field) {
-    for y in 1..FIELD_HEIGHT - 1 {
+    for y in 1..FIELD_HEIGHT - 2 {
         // ラインが揃っているかチェック
         let mut can_erace = true;
-        for x in 1..(FIELD_WIDTH - 1) {
+        for x in 2..(FIELD_WIDTH - 2) {
             if field[y][x] == 0 {
                 can_erace = false;
                 break;
@@ -137,6 +139,7 @@ pub fn move_block(game: &mut Game, new_pos: Position) {
 }
 
 /// 右に90度回転する
+#[allow(clippy::needless_range_loop)]
 pub fn rotate_right(game: &mut Game) {
     let mut new_shape: BlockShape = Default::default();
     for y in 0..4 {
