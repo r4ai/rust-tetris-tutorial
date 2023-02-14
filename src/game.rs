@@ -176,6 +176,9 @@ pub fn rotate_right(game: &mut Game) {
     }
     if !is_collision(&game.field, &game.pos, &new_shape) {
         game.block = new_shape;
+    } else if let Ok(new_pos) = super_rotation(&game.field, &game.pos, &new_shape) {
+        game.pos = new_pos;
+        game.block = new_shape;
     }
 }
 
@@ -189,7 +192,42 @@ pub fn rotate_left(game: &mut Game) {
     }
     if !is_collision(&game.field, &game.pos, &new_shape) {
         game.block = new_shape;
+    } else if let Ok(new_pos) = super_rotation(&game.field, &game.pos, &new_shape) {
+        game.pos = new_pos;
+        game.block = new_shape;
     }
+}
+
+/// スーパーローテーション
+fn super_rotation(field: &Field, pos: &Position, block: &BlockShape) -> Result<Position, ()> {
+    let diff_pos = [
+        // 上
+        Position {
+            x: pos.x,
+            y: pos.y.checked_sub(1).unwrap_or(pos.y),
+        },
+        // 右
+        Position {
+            x: pos.x.checked_add(1).unwrap_or(pos.x),
+            y: pos.y,
+        },
+        // 下
+        Position {
+            x: pos.x,
+            y: pos.y.checked_add(1).unwrap_or(pos.y),
+        },
+        // 左
+        Position {
+            x: pos.x.checked_sub(1).unwrap_or(pos.x),
+            y: pos.y,
+        },
+    ];
+    for pos in diff_pos {
+        if !is_collision(field, &pos, block) {
+            return Ok(pos);
+        }
+    }
+    Err(())
 }
 
 /// ブロックを生成する
