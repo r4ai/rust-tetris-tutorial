@@ -7,6 +7,7 @@ pub const FIELD_WIDTH: usize = 11 + 2 + 2; //  フィールド + 壁 + 番兵
 pub const FIELD_HEIGHT: usize = 20 + 1 + 1; // フィールド + 底 + 番兵
 pub type Field = [[BlockColor; FIELD_WIDTH]; FIELD_HEIGHT];
 
+#[derive(Clone, Copy)]
 pub struct Position {
     pub x: usize,
     pub y: usize,
@@ -175,6 +176,28 @@ pub fn spawn_block(game: &mut Game) -> Result<(), ()> {
     } else {
         Ok(())
     }
+}
+
+pub fn hard_drop(game: &mut Game) {
+    loop {
+        let new_pos = Position {
+            x: game.pos.x,
+            y: game.pos.y + 1,
+        };
+        if is_collision(&game.field, &new_pos, &game.block) {
+            break;
+        } else {
+            game.pos = new_pos;
+        }
+    }
+    move_block(game, game.pos);
+}
+
+pub fn landing(game: &mut Game) -> Result<(), ()> {
+    fix_block(game);
+    erace_line(&mut game.field);
+    spawn_block(game)?;
+    Ok(())
 }
 
 /// 盤面を描画し、ゲームオーバーを表示し、プログラムを終了する

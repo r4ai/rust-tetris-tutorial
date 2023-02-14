@@ -8,8 +8,8 @@ use std::thread;
 use std::{thread::sleep, time::Duration};
 
 use crate::game::{
-    draw, erace_line, fix_block, gameover, is_collision, move_block, quit, rotate_left,
-    rotate_right, spawn_block,
+    draw, erace_line, fix_block, gameover, hard_drop, is_collision, landing, move_block, quit,
+    rotate_left, rotate_right, spawn_block,
 };
 
 fn main() {
@@ -42,12 +42,8 @@ fn main() {
                 if !is_collision(&game.field, &new_pos, &game.block) {
                     // ブロックの移動
                     game.pos = new_pos;
-                } else {
-                    fix_block(&mut game);
-                    erace_line(&mut game.field);
-                    if spawn_block(&mut game).is_err() {
-                        gameover(&game);
-                    }
+                } else if landing(&mut game).is_err() {
+                    gameover(&game);
                 }
 
                 // 裏データの描画
@@ -85,6 +81,14 @@ fn main() {
                     y: game.pos.y + 1,
                 };
                 move_block(&mut game, new_pos);
+                draw(&game);
+            }
+            Ok(Key::Up) => {
+                let mut game = game.lock().unwrap();
+                hard_drop(&mut game);
+                if landing(&mut game).is_err() {
+                    gameover(&game);
+                }
                 draw(&game);
             }
             Ok(Key::Char('x')) => {
