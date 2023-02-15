@@ -5,6 +5,7 @@ mod play;
 use clap::{Parser, Subcommand};
 
 #[derive(Parser)]
+#[command(author, version, about, long_about = None)]
 struct Cli {
     #[command(subcommand)]
     mode: Option<Mode>,
