@@ -1,5 +1,3 @@
-use std::thread::spawn;
-
 use crate::block::{
     block_kind::{self, WALL as W},
     BlockColor, BlockKind, BlockShape, BLOCKS, COLOR_TABLE,
@@ -130,14 +128,29 @@ pub fn draw(
         }
     }
 
+    // ホールドを描画
+    println!("\x1b[2;28HHOLD");
+    if let Some(hold) = hold {
+        for y in 0..4 {
+            print!("\x1b[{};28H", y + 3);
+            for x in 0..4 {
+                print!("{}", COLOR_TABLE[hold[y][x]]);
+            }
+            println!();
+        }
+    }
+
     // 裏データの描画
     println!("\x1b[H"); // カーソルを先頭へ移動
     for y in 0..(FIELD_HEIGHT - 1) {
-        for x in 0..(FIELD_WIDTH - 1) {
+        for x in 1..(FIELD_WIDTH - 1) {
             print!("{}", COLOR_TABLE[field_buf[y][x]])
         }
         println!();
     }
+
+    // 色情報をリセット
+    println!("\x1b[0m");
 }
 
 /// ブロックをフィールドに固定する
