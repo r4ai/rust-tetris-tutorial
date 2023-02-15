@@ -6,8 +6,11 @@ use crate::{
     },
 };
 
+const MAX_ERASABLE_LINE: usize = 4;
+const MAX_HEIGHT: usize = 20;
+
 pub fn eval(game: &Game) -> Game {
-    let mut elite = (game.clone(), 0, FIELD_HEIGHT);
+    let mut elite = (game.clone(), 0f64);
 
     // 全回転
     for rotate_count in 0..=3 {
@@ -16,7 +19,7 @@ pub fn eval(game: &Game) -> Game {
             rotate_right(&mut game);
         }
         // 全横移動
-        for dx in -4..5 {
+        for dx in -4..=5 {
             let mut game = game.clone();
             let new_pos = Position {
                 x: match game.pos.x as isize + dx {
@@ -32,11 +35,25 @@ pub fn eval(game: &Game) -> Game {
             // インプット情報の取得
             let line = erase_line_count(&game.field);
             let height_max = field_height_max(&game.field);
+            let height_diff = diff_in_height(&game.field);
+            let dead_space = dead_space_count(&game.field);
+
+            // 正規化
+            let mut line = normalization(line as f64, 0.0, 4.0);
+            let mut height_max = 1.0 - normalization(height_max as f64, 0.0, 20.0);
+            let mut height_diff = 1.0 - normalization(height_diff as f64, 0.0, 200.0);
+            let mut dead_space = 1.0 - normalization(dead_space as f64, 0.0, 200.0);
+
+            // 重み付け
+            line *= 100.0;
+            height_max *= 1.0;
+            height_diff *= 10.0;
+            dead_space *= 100.0;
 
             // インプット情報の評価
-            if line >= elite.1 && height_max <= elite.2 {
-                // 一番良い個体を記録
-                elite = (game, line, height_max);
+            let score = line + height_max + height_diff + dead_space;
+            if elite.1 < score {
+                elite = (game, score);
             }
         }
     }
@@ -75,4 +92,53 @@ fn field_height_max(field: &Field) -> usize {
         }
     }
     0
+}
+
+/// フィールドの高低差の合計を返す
+#[allow(clippy::needless_range_loop)]
+pub fn diff_in_height(field: &Field) -> usize {
+    let mut diff = 0;
+    let mut top = [0; FIELD_WIDTH - 4];
+
+    // 各列の一番上の高さを求める
+    for x in 2..(FIELD_WIDTH - 2) {
+        for y in 1..(FIELD_HEIGHT - 2) {
+            if field[y][x] != block_kind::NONE {
+                top[x - 2] = FIELD_HEIGHT - y - 1;
+                break;
+            }
+        }
+    }
+
+    // 右隣りとの差を合計する
+    for i in 0..(FIELD_WIDTH - 4 - 1) {
+        diff += top[i].abs_diff(top[i + 1]);
+    }
+
+    diff
+}
+
+/// デッドスペース数を返す
+pub fn dead_space_count(field: &Field) -> usize {
+    let mut count = 0;
+    for y in (1..(FIELD_HEIGHT - 2)).rev() {
+        for x in 2..(FIELD_WIDTH - 2) {
+            // 各列の一番下の何もない座標
+            if field[y][x] == block_kind::NONE {
+                for y2 in (2..y).rev() {
+                    // 上にブロックがあるならデッドスペース
+                    if field[y2][x] != block_kind::NONE {
+                        count += 1;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    count
+}
+
+// 正規化 (Min-Max Normalization)
+fn normalization(value: f64, min: f64, max: f64) -> f64 {
+    (value - min) / (max - min)
 }
