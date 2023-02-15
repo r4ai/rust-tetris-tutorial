@@ -1,7 +1,7 @@
 use crate::{
     block::block_kind,
     game::{
-        fix_block, hard_drop, move_block, rotate_right, Field, Game, Position, FIELD_HEIGHT,
+        fix_block, hard_drop, hold, move_block, rotate_right, Field, Game, Position, FIELD_HEIGHT,
         FIELD_WIDTH,
     },
 };
@@ -12,48 +12,55 @@ const MAX_HEIGHT: usize = 20;
 pub fn eval(game: &Game) -> Game {
     let mut elite = (game.clone(), 0f64);
 
-    // 全回転
-    for rotate_count in 0..=3 {
+    // ホールド有無
+    for do_hold in [true, false] {
         let mut game = game.clone();
-        for _ in 0..rotate_count {
-            rotate_right(&mut game);
+        if do_hold {
+            hold(&mut game);
         }
-        // 全横移動
-        for dx in -4..=5 {
+        // 全回転
+        for rotate_count in 0..=3 {
             let mut game = game.clone();
-            let new_pos = Position {
-                x: match game.pos.x as isize + dx {
-                    (..=0) => 0,
-                    x => x as usize,
-                },
-                y: game.pos.y,
-            };
-            move_block(&mut game, new_pos);
-            hard_drop(&mut game);
-            fix_block(&mut game);
+            for _ in 0..rotate_count {
+                rotate_right(&mut game);
+            }
+            // 全横移動
+            for dx in -4..=5 {
+                let mut game = game.clone();
+                let new_pos = Position {
+                    x: match game.pos.x as isize + dx {
+                        (..=0) => 0,
+                        x => x as usize,
+                    },
+                    y: game.pos.y,
+                };
+                move_block(&mut game, new_pos);
+                hard_drop(&mut game);
+                fix_block(&mut game);
 
-            // インプット情報の取得
-            let line = erase_line_count(&game.field);
-            let height_max = field_height_max(&game.field);
-            let height_diff = diff_in_height(&game.field);
-            let dead_space = dead_space_count(&game.field);
+                // インプット情報の取得
+                let line = erase_line_count(&game.field);
+                let height_max = field_height_max(&game.field);
+                let height_diff = diff_in_height(&game.field);
+                let dead_space = dead_space_count(&game.field);
 
-            // 正規化
-            let mut line = normalization(line as f64, 0.0, 4.0);
-            let mut height_max = 1.0 - normalization(height_max as f64, 0.0, 20.0);
-            let mut height_diff = 1.0 - normalization(height_diff as f64, 0.0, 200.0);
-            let mut dead_space = 1.0 - normalization(dead_space as f64, 0.0, 200.0);
+                // 正規化
+                let mut line = normalization(line as f64, 0.0, 4.0);
+                let mut height_max = 1.0 - normalization(height_max as f64, 0.0, 20.0);
+                let mut height_diff = 1.0 - normalization(height_diff as f64, 0.0, 200.0);
+                let mut dead_space = 1.0 - normalization(dead_space as f64, 0.0, 200.0);
 
-            // 重み付け
-            line *= 100.0;
-            height_max *= 1.0;
-            height_diff *= 10.0;
-            dead_space *= 100.0;
+                // 重み付け
+                line *= 100.0;
+                height_max *= 1.0;
+                height_diff *= 10.0;
+                dead_space *= 100.0;
 
-            // インプット情報の評価
-            let score = line + height_max + height_diff + dead_space;
-            if elite.1 < score {
-                elite = (game, score);
+                // インプット情報の評価
+                let score = line + height_max + height_diff + dead_space;
+                if elite.1 < score {
+                    elite = (game, score);
+                }
             }
         }
     }
