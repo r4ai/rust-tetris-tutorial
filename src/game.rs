@@ -29,6 +29,7 @@ impl Position {
     }
 }
 
+#[derive(Clone)]
 pub struct Game {
     pub field: Field,                   // フィールドデータ(裏データ)
     pub pos: Position,                  // 現在のブロックの位置

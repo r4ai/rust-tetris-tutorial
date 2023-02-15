@@ -5,11 +5,13 @@ use std::{
 };
 
 use getch_rs::{Getch, Key};
-use rand::Rng;
 
-use crate::game::{
-    draw, gameover, hard_drop, hold, is_collision, landing, move_block, quit, rotate_left,
-    rotate_right, Game, Position,
+use crate::{
+    ai::eval,
+    game::{
+        draw, gameover, hard_drop, hold, is_collision, landing, move_block, quit, rotate_left,
+        rotate_right, Game, Position,
+    },
 };
 
 /// 通常プレイ
@@ -138,27 +140,11 @@ pub fn auto() -> ! {
             // 必要な変数の取得
             let mut game = game.lock().unwrap();
 
-            // 20%くらいの確立でホールド
-            let mut rng = rand::thread_rng();
-            if rng.gen_range(0..5) == 0 {
-                hold(&mut game);
-            }
+            // 自動操作
+            let elite = eval(&game);
+            *game = elite;
 
-            // ランダムに回転
-            for _ in 0..rng.gen_range(0..=3) {
-                rotate_right(&mut game);
-            }
-
-            // ランダムに横移動
-            let dx: isize = rng.gen_range(-4..=5);
-            let new_pos = Position {
-                x: (game.pos.x as isize + dx) as usize,
-                y: game.pos.y,
-            };
-            move_block(&mut game, new_pos);
-
-            // ハードドロップ
-            hard_drop(&mut game);
+            // 終了判定
             if landing(&mut game).is_err() {
                 // ブロックを生成できないならゲームオーバー
                 gameover(&game);
