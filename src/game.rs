@@ -1,3 +1,5 @@
+use std::thread::spawn;
+
 use crate::block::{
     block_kind::{self, WALL as W},
     BlockColor, BlockKind, BlockShape, BLOCKS, COLOR_TABLE,
@@ -23,6 +25,8 @@ pub struct Game {
     pub field: Field,
     pub pos: Position,
     pub block: BlockShape,
+    pub hold: Option<BlockShape>,
+    pub holded: bool,
 }
 
 impl Game {
@@ -54,6 +58,8 @@ impl Game {
             ],
             pos: Position::init(),
             block: BLOCKS[rand::random::<BlockKind>() as usize],
+            hold: None,
+            holded: false,
         }
     }
 }
@@ -93,7 +99,15 @@ fn get_ghost_pos(field: &Field, pos: &Position, block: &BlockShape) -> Position 
 }
 
 #[allow(clippy::needless_range_loop)]
-pub fn draw(Game { field, pos, block }: &Game) {
+pub fn draw(
+    Game {
+        field,
+        pos,
+        block,
+        hold,
+        ..
+    }: &Game,
+) {
     // 裏データの生成
     let mut field_buf = *field;
 
@@ -127,7 +141,11 @@ pub fn draw(Game { field, pos, block }: &Game) {
 }
 
 /// ブロックをフィールドに固定する
-pub fn fix_block(Game { field, pos, block }: &mut Game) {
+pub fn fix_block(
+    Game {
+        field, pos, block, ..
+    }: &mut Game,
+) {
     for y in 0..4 {
         for x in 0..4 {
             if block[y][x] != block_kind::NONE {
@@ -135,6 +153,29 @@ pub fn fix_block(Game { field, pos, block }: &mut Game) {
             }
         }
     }
+}
+
+/// ホールド処理
+/// - 1回目のホールドは現在のブロックをホールド
+/// - 2回目以降のホールドは現在のブロックとホールドを交換
+/// - 現在のブロックに対して既にホールドしている場合は何もしない
+pub fn hold(game: &mut Game) {
+    if game.holded {
+        // 現在のブロックに対して既にホールドしている場合は何もしない
+        return;
+    }
+    if let Some(mut hold) = game.hold {
+        // ホールドの交換
+        std::mem::swap(&mut hold, &mut game.block);
+        game.hold = Some(hold);
+        game.pos = Position::init();
+    } else {
+        // ホールドして、新しいブロックを生成
+        game.hold = Some(game.block);
+        spawn_block(game).ok();
+    }
+    // ホールドしたのでフラグを立てる
+    game.holded = true;
 }
 
 /// ラインが揃っているかチェックし、揃っている場合は削除する
@@ -277,10 +318,12 @@ pub fn hard_drop(game: &mut Game) {
     move_block(game, game.pos);
 }
 
+/// ブロックが着地したときの処理
 pub fn landing(game: &mut Game) -> Result<(), ()> {
     fix_block(game);
     erace_line(&mut game.field);
     spawn_block(game)?;
+    game.holded = false;
     Ok(())
 }
 

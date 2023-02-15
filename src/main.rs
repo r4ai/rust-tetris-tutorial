@@ -8,8 +8,8 @@ use std::thread;
 use std::{thread::sleep, time::Duration};
 
 use crate::game::{
-    draw, erace_line, fix_block, gameover, hard_drop, is_collision, landing, move_block, quit,
-    rotate_left, rotate_right, spawn_block,
+    draw, gameover, hard_drop, hold, is_collision, landing, move_block, quit, rotate_left,
+    rotate_right,
 };
 
 fn main() {
@@ -99,6 +99,11 @@ fn main() {
             Ok(Key::Char('z')) => {
                 let mut game = game.lock().unwrap();
                 rotate_left(&mut game);
+                draw(&game);
+            }
+            Ok(Key::Char(' ')) => {
+                let mut game = game.lock().unwrap();
+                hold(&mut game);
                 draw(&game);
             }
             Ok(Key::Char('q')) => quit(),
