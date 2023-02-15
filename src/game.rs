@@ -30,14 +30,15 @@ impl Position {
 }
 
 pub struct Game {
-    pub field: Field,
-    pub pos: Position,
-    pub block: BlockShape,
-    pub hold: Option<BlockShape>,
-    pub holded: bool,
-    pub next: VecDeque<BlockShape>,
-    pub next_buf: VecDeque<BlockShape>,
-    pub score: usize,
+    pub field: Field,                   // フィールドデータ(裏データ)
+    pub pos: Position,                  // 現在のブロックの位置
+    pub block: BlockShape,              // 現在のブロック
+    pub hold: Option<BlockShape>,       // ホールドしたブロック
+    pub holded: bool,                   // ホールド済みか
+    pub next: VecDeque<BlockShape>,     // 次のブロック(3つ)
+    pub next_buf: VecDeque<BlockShape>, // 次のブロックのバッファ(1~7つ)
+    pub score: usize,                   // 現在のスコア
+    pub line: usize,                    // 消したライン数
 }
 
 impl Game {
@@ -74,6 +75,7 @@ impl Game {
             next: gen_block_7().into(),
             next_buf: gen_block_7().into(),
             score: 0,
+            line: 0,
         };
         // 初期ブロックを供給
         spawn_block(&mut game).ok();
@@ -385,6 +387,7 @@ pub fn landing(game: &mut Game) -> Result<(), ()> {
     fix_block(game);
     let line = erace_line(&mut game.field);
     game.score += SCORE_TABLE[line];
+    game.line += line;
     spawn_block(game)?;
     game.holded = false;
     Ok(())

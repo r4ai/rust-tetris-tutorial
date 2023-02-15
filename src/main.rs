@@ -28,8 +28,13 @@ fn main() {
 
         thread::spawn(move || {
             loop {
-                // 1秒待機
-                sleep(Duration::from_millis(1000));
+                // 10ライン消すごとに、100ミリ秒速くすることにする
+                let sleep_msec =
+                    match 1000u64.saturating_sub((game.lock().unwrap().line as u64 / 10) * 100) {
+                        0 => 100,
+                        msec => msec,
+                    };
+                sleep(Duration::from_millis(sleep_msec));
 
                 // 必要な変数の取得
                 let mut game = game.lock().unwrap();
