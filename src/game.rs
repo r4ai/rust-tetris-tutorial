@@ -1,3 +1,5 @@
+use std::collections::VecDeque;
+
 use crate::block::{
     block_kind::{self, WALL as W},
     BlockColor, BlockKind, BlockShape, BLOCKS, COLOR_TABLE,
@@ -6,6 +8,7 @@ use crate::block::{
 pub const FIELD_WIDTH: usize = 11 + 2 + 2; //  フィールド + 壁 + 番兵
 pub const FIELD_HEIGHT: usize = 20 + 1 + 1; // フィールド + 底 + 番兵
 pub type Field = [[BlockColor; FIELD_WIDTH]; FIELD_HEIGHT];
+pub const NEXT_LENGTH: usize = 3;
 
 #[derive(Clone, Copy)]
 pub struct Position {
@@ -25,6 +28,7 @@ pub struct Game {
     pub block: BlockShape,
     pub hold: Option<BlockShape>,
     pub holded: bool,
+    pub next: VecDeque<BlockShape>,
 }
 
 impl Game {
@@ -58,6 +62,13 @@ impl Game {
             block: BLOCKS[rand::random::<BlockKind>() as usize],
             hold: None,
             holded: false,
+            next: {
+                let mut deque = VecDeque::new();
+                for _ in 0..NEXT_LENGTH {
+                    deque.push_back(BLOCKS[rand::random::<BlockKind>() as usize]);
+                }
+                deque
+            },
         }
     }
 }
@@ -103,7 +114,8 @@ pub fn draw(
         pos,
         block,
         hold,
-        ..
+        holded: _,
+        next,
     }: &Game,
 ) {
     // 裏データの生成
@@ -135,6 +147,18 @@ pub fn draw(
             print!("\x1b[{};28H", y + 3);
             for x in 0..4 {
                 print!("{}", COLOR_TABLE[hold[y][x]]);
+            }
+            println!();
+        }
+    }
+
+    // ネクストブロックたちを描画
+    println!("\x1b[8;28HNEXT"); // カーソルをネクスト位置に移動
+    for (i, next) in next.iter().enumerate() {
+        for y in 0..4 {
+            print!("\x1b[{};28H", i * 4 + y + 9); // カーソルを移動
+            for x in 0..4 {
+                print!("{}", COLOR_TABLE[next[y][x]]);
             }
             println!();
         }
@@ -308,7 +332,9 @@ fn super_rotation(field: &Field, pos: &Position, block: &BlockShape) -> Result<P
 /// 生成に失敗した場合はエラーを返す
 pub fn spawn_block(game: &mut Game) -> Result<(), ()> {
     game.pos = Position::init();
-    game.block = BLOCKS[rand::random::<BlockKind>() as usize];
+    game.block = game.next.pop_front().unwrap();
+    game.next
+        .push_back(BLOCKS[rand::random::<BlockKind>() as usize]);
     if is_collision(&game.field, &game.pos, &game.block) {
         Err(())
     } else {
