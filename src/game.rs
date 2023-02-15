@@ -9,6 +9,13 @@ pub const FIELD_WIDTH: usize = 11 + 2 + 2; //  フィールド + 壁 + 番兵
 pub const FIELD_HEIGHT: usize = 20 + 1 + 1; // フィールド + 底 + 番兵
 pub type Field = [[BlockColor; FIELD_WIDTH]; FIELD_HEIGHT];
 pub const NEXT_LENGTH: usize = 3;
+pub const SCORE_TABLE: [usize; 5] = [
+    0,   // 0段消し
+    1,   // 1段消し
+    5,   // 2段消し
+    25,  // 3段消し
+    125, // 4段消し
+];
 
 #[derive(Clone, Copy)]
 pub struct Position {
@@ -30,6 +37,7 @@ pub struct Game {
     pub holded: bool,
     pub next: VecDeque<BlockShape>,
     pub next_buf: VecDeque<BlockShape>,
+    pub score: usize,
 }
 
 impl Game {
@@ -65,6 +73,7 @@ impl Game {
             holded: false,
             next: gen_block_7().into(),
             next_buf: gen_block_7().into(),
+            score: 0,
         };
         // 初期ブロックを供給
         spawn_block(&mut game).ok();
@@ -113,8 +122,8 @@ pub fn draw(
         pos,
         block,
         hold,
-        holded: _,
         next,
+        score,
         ..
     }: &Game,
 ) {
@@ -163,6 +172,9 @@ pub fn draw(
             println!();
         }
     }
+
+    // スコアを描画
+    println!("\x1b[22;28H{score}");
 
     // 裏データの描画
     println!("\x1b[H"); // カーソルを先頭へ移動
@@ -216,7 +228,9 @@ pub fn hold(game: &mut Game) {
 }
 
 /// ラインが揃っているかチェックし、揃っている場合は削除する
-pub fn erace_line(field: &mut Field) {
+/// return: 消したライン数
+pub fn erace_line(field: &mut Field) -> usize {
+    let mut count = 0;
     for y in 1..FIELD_HEIGHT - 2 {
         // ラインが揃っているかチェック
         let mut can_erace = true;
@@ -229,11 +243,13 @@ pub fn erace_line(field: &mut Field) {
 
         // ラインを削除
         if can_erace {
+            count += 1;
             for y2 in (2..=y).rev() {
                 field[y2] = field[y2 - 1];
             }
         }
     }
+    count
 }
 
 /// ブロックを指定した座標へ移動できるなら移動する
@@ -367,7 +383,8 @@ pub fn hard_drop(game: &mut Game) {
 /// ブロックが着地したときの処理
 pub fn landing(game: &mut Game) -> Result<(), ()> {
     fix_block(game);
-    erace_line(&mut game.field);
+    let line = erace_line(&mut game.field);
+    game.score += SCORE_TABLE[line];
     spawn_block(game)?;
     game.holded = false;
     Ok(())
